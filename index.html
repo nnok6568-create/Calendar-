@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>내 할 일</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-header-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        </span>
+        <h1 class="app-title">내 할 일</h1>
+      </div>
+      <div class="header-actions">
+        <button type="button" id="today-btn" class="btn">오늘</button>
+        <button type="button" id="export-btn" class="btn btn-ghost">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+          <span class="label-sm-hidden">내보내기</span>
+        </button>
+        <button type="button" id="import-btn" class="btn btn-ghost">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg>
+          <span class="label-sm-hidden">가져오기</span>
+        </button>
+        <input type="file" id="import-file" accept=".json,application/json" hidden>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <!-- 좌측: 캘린더 -->
+    <section id="calendar" class="calendar card" aria-label="캘린더">
+      <div class="calendar-header">
+        <button type="button" id="prev-month" class="icon-btn" aria-label="이전 달">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+        <h2 id="month-title" class="month-title"></h2>
+        <button type="button" id="next-month" class="icon-btn" aria-label="다음 달">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+      <div class="calendar-weekdays" aria-hidden="true">
+        <span class="is-sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="is-sat">토</span>
+      </div>
+      <div id="calendar-grid" class="calendar-grid"></div>
+    </section>
+
+    <!-- 우측: 선택 날짜 패널 -->
+    <section id="day-panel" class="day-panel" aria-label="선택한 날짜의 할 일">
+      <div class="day-head">
+        <h2 id="selected-date-title" class="selected-date-title" tabindex="-1"></h2>
+        <span id="selected-holiday" class="holiday-name" hidden></span>
+        <div id="view-tabs" class="segmented view-tabs" role="group" aria-label="목록 보기">
+          <button type="button" data-view="day">하루</button>
+          <button type="button" data-view="week">주간</button>
+          <button type="button" data-view="month">월간</button>
+        </div>
+      </div>
+
+      <form id="item-form" class="item-form card" autocomplete="off">
+        <div class="type-switch" role="radiogroup" aria-label="종류">
+          <label><input type="radio" name="item-type" value="task" checked><span>할 일</span></label>
+          <label><input type="radio" name="item-type" value="event"><span>일정</span></label>
+        </div>
+        <div class="form-row">
+          <input type="text" id="item-title" class="input item-title-input"
+                 placeholder="할 일을 입력하세요" maxlength="100" aria-label="제목">
+          <button type="submit" class="btn btn-primary add-btn">추가</button>
+        </div>
+        <div class="form-details">
+          <select id="item-category" class="input" aria-label="카테고리">
+            <option value="work">업무</option>
+            <option value="personal">개인</option>
+            <option value="etc" selected>기타</option>
+          </select>
+          <input type="date" id="item-date" class="input" aria-label="날짜">
+          <!-- 할 일 전용 -->
+          <select id="item-priority" class="input" aria-label="중요도">
+            <option value="high">중요도 상</option>
+            <option value="medium" selected>중요도 중</option>
+            <option value="low">중요도 하</option>
+          </select>
+        </div>
+        <!-- 일정 전용: 10분 단위 시간 선택 -->
+        <div id="item-time-fields" class="time-fields" hidden>
+          <div class="time-field">
+            <span class="time-label">시작</span>
+            <select id="item-start-hour" class="input" aria-label="시작 시"></select>
+            <select id="item-start-minute" class="input" aria-label="시작 분"></select>
+          </div>
+          <div class="time-field">
+            <span class="time-label">종료</span>
+            <select id="item-end-hour" class="input" aria-label="종료 시"></select>
+            <select id="item-end-minute" class="input" aria-label="종료 분"></select>
+          </div>
+          <div class="repeat-field">
+            <span class="time-label">반복</span>
+            <select id="item-repeat" class="input" aria-label="반복"></select>
+            <input type="date" id="item-repeat-until" class="input" aria-label="반복 종료일 (선택)" title="반복 종료일 (비우면 계속 반복)">
+            <span class="time-label" aria-hidden="true">까지</span>
+          </div>
+        </div>
+        <input type="text" id="item-memo" class="input item-memo-input"
+               placeholder="메모 (선택)" aria-label="메모">
+      </form>
+
+      <nav id="filter-tabs" class="filter-tabs" aria-label="카테고리 필터">
+        <button type="button" class="chip" data-filter="all">전체</button>
+        <button type="button" class="chip" data-filter="work">업무</button>
+        <button type="button" class="chip" data-filter="personal">개인</button>
+        <button type="button" class="chip" data-filter="etc">기타</button>
+      </nav>
+
+      <div id="day-lists" class="day-lists">
+        <section class="list-section" aria-labelledby="events-heading">
+          <div class="section-head">
+            <h3 id="events-heading" class="section-title">일정 <span id="event-count" class="section-count"></span></h3>
+          </div>
+          <ul id="event-list" class="item-list"></ul>
+          <p id="event-empty" class="empty-message" hidden></p>
+        </section>
+
+        <section class="list-section" aria-labelledby="tasks-heading">
+          <div class="section-head">
+            <h3 id="tasks-heading" class="section-title">할 일 <span id="task-count" class="section-count"></span></h3>
+            <label class="hide-completed">
+              <input type="checkbox" id="hide-completed"> 완료 항목 숨기기
+            </label>
+          </div>
+          <ul id="task-list" class="item-list"></ul>
+          <p id="task-empty" class="empty-message" hidden></p>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <!-- 보이는 알림(토스트). 화면 읽기 프로그램에는 아래 live 영역으로 전달한다 -->
+  <p id="status" class="status" aria-hidden="true" hidden></p>
+  <div id="live-status" class="sr-only" role="status" aria-live="polite"></div>
+  <div id="live-alert" class="sr-only" role="alert" aria-live="assertive"></div>
+
+  <!-- 수정 모달 -->
+  <dialog id="edit-dialog" class="edit-dialog" aria-labelledby="edit-dialog-title">
+    <form id="edit-form" class="edit-form" autocomplete="off">
+      <h2 id="edit-dialog-title">할 일 수정</h2>
+      <div class="type-switch" role="radiogroup" aria-label="종류">
+        <label><input type="radio" name="edit-type" value="task"><span>할 일</span></label>
+        <label><input type="radio" name="edit-type" value="event"><span>일정</span></label>
+      </div>
+      <label class="field">제목
+        <input type="text" id="edit-title" class="input" maxlength="100" required autofocus>
+      </label>
+      <label id="edit-priority-field" class="field">중요도
+        <select id="edit-priority" class="input">
+          <option value="high">상</option>
+          <option value="medium">중</option>
+          <option value="low">하</option>
+        </select>
+      </label>
+      <div class="field-row">
+        <label class="field">카테고리
+          <select id="edit-category" class="input">
+            <option value="work">업무</option>
+            <option value="personal">개인</option>
+            <option value="etc">기타</option>
+          </select>
+        </label>
+        <label class="field">날짜
+          <input type="date" id="edit-date" class="input" required>
+        </label>
+      </div>
+      <div id="edit-time-fields" class="time-fields" hidden>
+        <div class="time-field">
+          <span class="time-label">시작</span>
+          <select id="edit-start-hour" class="input" aria-label="시작 시"></select>
+          <select id="edit-start-minute" class="input" aria-label="시작 분"></select>
+        </div>
+        <div class="time-field">
+          <span class="time-label">종료</span>
+          <select id="edit-end-hour" class="input" aria-label="종료 시"></select>
+          <select id="edit-end-minute" class="input" aria-label="종료 분"></select>
+        </div>
+        <div class="repeat-field">
+          <span class="time-label">반복</span>
+          <select id="edit-repeat" class="input" aria-label="반복"></select>
+          <input type="date" id="edit-repeat-until" class="input" aria-label="반복 종료일 (선택)" title="반복 종료일 (비우면 계속 반복)">
+          <span class="time-label" aria-hidden="true">까지</span>
+        </div>
+      </div>
+      <label class="field">메모 (선택)
+        <textarea id="edit-memo" class="input" rows="3"></textarea>
+      </label>
+      <div class="dialog-actions">
+        <button type="button" id="edit-cancel" class="btn">취소</button>
+        <button type="submit" class="btn btn-primary">저장</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
