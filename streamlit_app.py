@@ -4,6 +4,7 @@
 HTML 문자열 하나로 그리기 때문에, CSS와 JS 파일을 HTML 안에 넣어(inline) 넘긴다.
 데이터는 서버가 아니라 각 사용자 브라우저의 localStorage에 저장된다.
 """
+import re
 from pathlib import Path
 
 import streamlit as st
@@ -12,6 +13,8 @@ import streamlit.components.v1 as components
 BASE = Path(__file__).parent
 CSS_TAG = '<link rel="stylesheet" href="style.css">'
 JS_TAG = '<script src="app.js"></script>'
+# 핸드폰 설치(PWA)용 태그는 iframe 안에서는 쓰이지 않고 아이콘 요청만 실패하므로 뺀다
+PWA_TAGS = re.compile(r'\s*<link rel="(?:manifest|icon|apple-touch-icon)"[^>]*>')
 
 st.set_page_config(page_title="내 할 일", page_icon="✅", layout="wide")
 
@@ -23,6 +26,7 @@ def build_page() -> str:
     js = (BASE / "app.js").read_text(encoding="utf-8")
     if CSS_TAG not in html or JS_TAG not in html:
         raise RuntimeError("index.html에서 style.css / app.js 태그를 찾지 못했습니다.")
+    html = PWA_TAGS.sub("", html)
     return html.replace(CSS_TAG, f"<style>\n{css}\n</style>").replace(JS_TAG, f"<script>\n{js}\n</script>")
 
 

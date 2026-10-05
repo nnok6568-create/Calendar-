@@ -1384,6 +1384,16 @@
     applyFormType();
     bindEvents();
     render();
+    registerServiceWorker();
+  }
+
+  // 홈 화면에 설치한 앱이 오프라인에서도 열리도록 서비스 워커 등록.
+  // 웹 주소(http/https)일 때만 — 파일로 열기(file://)나 Streamlit iframe(about:srcdoc)에서는 건너뛴다.
+  function registerServiceWorker() {
+    if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
+    navigator.serviceWorker.register('sw.js').catch(function (e) {
+      console.warn('서비스 워커를 등록하지 못했습니다.', e);
+    });
   }
 
   document.addEventListener('DOMContentLoaded', init);
