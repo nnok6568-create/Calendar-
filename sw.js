@@ -1,17 +1,17 @@
 // 서비스 워커: 홈 화면에 설치한 앱이 인터넷 없이도 열리게 한다.
 // 네트워크 우선 — 연결되어 있으면 항상 최신 파일을 받아 캐시를 갱신하고, 끊겼을 때만 캐시를 쓴다.
 // (데이터는 localStorage에 있으므로 여기서는 앱 파일만 다룬다.)
-var CACHE = 'todo-app-v1';
+var CACHE = 'todo-app-v2'; // 아이콘 위치를 바꾸면서 올림 (옛 캐시는 activate 때 지워짐)
 var FILES = [
   './',
   'index.html',
   'style.css',
   'app.js',
   'manifest.webmanifest',
-  'icons/icon-192.png',
-  'icons/icon-512.png',
-  'icons/icon-maskable-512.png',
-  'icons/apple-touch-icon.png'
+  'icon-192.png',
+  'icon-512.png',
+  'icon-maskable-512.png',
+  'apple-touch-icon.png'
 ];
 
 self.addEventListener('install', function (event) {
